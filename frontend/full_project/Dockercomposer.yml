@@ -5,22 +5,26 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: backend_container
+    container_name: backend_service
     ports:
       - "5000:5000"
-    volumes:
-      - .:/app
-      - /app/node_modules
     environment:
       - REDIS_HOST=redis
-      - ENV=TESTING
+      - ENV=PRODUCTION
     depends_on:
       - redis
-    command: ["npm", "run", "test"]
+    command: ["node", "index.js"]
 
-  redis:
-    image: redis
-    container_name: redis_container
+  frontend:
+    build:
+      context: ./view
+      dockerfile: Dockerfile
+    container_name: frontend_service
+    ports:
+      - "3000:3000"
+    command: ["npm", "start"]
+
+ 
 
 networks:
   default:
