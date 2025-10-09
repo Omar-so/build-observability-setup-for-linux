@@ -1,0 +1,89 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "/app/generated/prisma-client"
+}
+
+model User {
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  email     String?    @unique
+  name      String?
+  image     String?
+
+  posts     Post[]
+  comments  Comment[]
+  bookmarks Bookmark[]
+  likes     Like[]
+  followers Follow[] @relation("followers")
+  following Follow[] @relation("following") 
+}
+
+model Follow {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  followerId String
+  followingId String
+
+  follower  User @relation("following", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId]) // prevent duplicate follows
+}
+
+
+
+model Post {
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  title     String
+  content   String?
+  image    String?
+  published Boolean    @default(false)
+  authorId  String
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Relations
+  comments  Comment[]
+  bookmarks Bookmark[]
+  postLikes Like[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  content   String
+  postId    String
+  authorId  String
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  postId    String
+  userId    String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  postId    String
+  userId    String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+}
