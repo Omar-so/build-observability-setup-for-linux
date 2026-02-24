@@ -1,0 +1,42 @@
+groups:
+  - name: node_resource_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance)(
+                rate(node_cpu_seconds_total{mode="idle"}[5m])
+              ) * 100) > 85
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU usage above 85%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory usage above 90%"
+
+      - alert: HighNetworkUsage
+        expr: (
+                increase(node_network_receive_bytes_total{device!~"lo|docker.*"}[1h]) +
+                increase(node_network_transmit_bytes_total{device!~"lo|docker.*"}[1h])
+              ) / 1024 / 1024 / 1024 > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 2GB network used in last hour"
+
+      - alert: HighNetworkThroughput
+        expr: (
+                rate(node_network_receive_bytes_total{device!~"lo|docker.*"}[5m]) +
+                rate(node_network_transmit_bytes_total{device!~"lo|docker.*"}[5m])
+              ) * 8 / 1024 / 1024 > 100
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Network above 100 Mbps"
